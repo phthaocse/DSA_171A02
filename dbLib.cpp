@@ -48,7 +48,7 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
         }
         db.removeHead();/// remove the first dummy
 
-        db.reverse();
+     //   db.reverse();
         inFile.close();
     }
     else {

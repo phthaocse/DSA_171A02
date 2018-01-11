@@ -45,7 +45,7 @@ class L1List {
     size_t      _size;// number of elements in this list
 public:
     L1List() : _pHead(NULL), _size(0) {}
-    ~L1List();
+    ~L1List(){};
 
     void    clean();
     bool    isEmpty() {
@@ -156,6 +156,19 @@ int L1List<T>::removeLast() {
     return -1;
 }
 
+template<class T>
+T& L1List<T>::operator [](int idx)
+{
+	//if(_pHead == NULL)
+	L1Item<T>* p = _pHead;
+	while(idx>0 &&p)
+	{
+		p = p->pNext;
+		idx--;
+	}
+	if(p) return p->data;
+}
+
 /************************************************************************
  * This section is for AVL tree
  ************************************************************************/
@@ -171,6 +184,7 @@ struct AVLNode {
     AVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0) {}
 #endif
 };
+
 
 template <class T>
 class AVLTree {
@@ -203,5 +217,122 @@ protected:
     bool balanceLeft(AVLNode<T>* &pR);
     bool balanceRight(AVLNode<T>* &pR);
 };
+
+//  implementation default avl
+
+template<class T>
+void AVLTree<T>::rotLeft(AVLNode<T>*& pR){
+	if(pR==NULL) return;
+	AVLNode<T>* p = pR->_pRight;
+	pR->_pRight = p->_pLeft;
+	p->_pLeft = pR;
+	pR=p;
+}
+
+template<class T>
+void AVLTree<T>::rotRight(AVLNode<T>*& pR){
+	if(pR==NULL) return;
+	AVLNode<T>* p = pR->_pLeft;
+	pR->_pLeft = p->_pRight;
+	p->_pRight = pR;
+	pR = p;
+}
+
+template<class T>
+void AVLTree<T>::rotLR(AVLNode<T>*& pR){
+	rotLeft(pR->pLeft);
+	rotRight(pR);
+}
+
+template<class T>
+void AVLTree<T>::rotRL(AVLNode<T>*& pR){
+	rotRight(pR->_pRight);
+	rotLeft(pR);
+}
+
+template<class T>
+bool AVLTree<T>::balanceLeft(AVLNode<T>*& pR){
+	if(pR->_bFactor == 0){pR->b = -1; return true;}
+	if(pR->_bFactor== 1){ pR->b = 0; return false;}
+	if(pR->_pLeft->_bFactor == -1){// L-L
+		rotRight(pR);
+		pR->_bFactor  = 0;
+		pR->_pRight->_bFactor = 0;
+		return false;
+	}
+	if(pR->_pLeft->_bFactor == 0){ // use for remove function
+		rotRight(pR);
+		pR->_bFactor = 1;
+		pR->_pRight->_bFactor = -1;
+		return true;
+	}
+	rotLR(pR); // L-R
+	if(pR->_bFactor == -1){
+		pR->_pLeft->_bFactor = 0;
+		pR->_bFactor = 0;
+		pR->_pRight->_bFactor = 1;
+		return false;
+	}
+	if(pR->_bFactor == 1){
+		pR->_pLeft->_bFactor = -1;
+		pR->_bFactor  = 0;
+		pR->_pRight->_bFactor = 0;
+		return false;
+	}
+	pR->_pLeft->_bFactor = 0;
+	pR->_bFactor = 0;
+	pR->_pRight->_bFactor = 0;
+	return false;
+}
+
+
+template<class T>
+bool AVLTree<T>::balanceRight(AVLNode<T>*& pR){
+	if(pR->_bFactor == 0){pR->_bFactor = 1; return true;}
+	if(pR->_bFactor == -1){ pR->_bFactor = 0; return false;}
+	if(pR->_pRight->_bFactor == 1){
+		rotLeft(pR);
+		pR->_bFactor = 0;
+		pR->_pLeft->_bFactor = 0;
+		return false;
+	}
+	if(pR->_pRight->_bFactor == 0){ // use for remove function
+		rotLeft(pR);
+		pR->_bFactor = -1;
+		pR->_pLeft->_bFactor = 1;
+		return true;
+	}
+	rotRL(pR); // R-L
+	if(pR->_bFactor == 1){
+		pR->_pRight->_bFactor = 0;
+		pR->_bFactor = 0;
+		pR->_pLeft->_bFactor = -1;
+		return false;
+	}
+	if(pR->_bFactor == -1){
+		pR->_pRight->_bFactor = 1;
+		pR->_bFactor = 0;
+		pR->_pLeft->_bFactor  = 0;
+		return false;
+	}
+	pR->_pRight->_bFactor  = 0;
+	pR->_bFactor = 0;
+	pR->_pLeft->_bFactor  = 0;
+	return false;
+}
+
+
+
+template <class T>
+struct MyAVLNode{
+	T			_data;
+	AVLTree<T>  timet;//
+	AVLTree<T>  longt;
+	AVLTree<T>  latt;
+	MyAVLNode<T>   *_pLeft, *_pRight;
+	int         _bFactor;
+	//MyAVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0) {}
+};
+
 
 #endif //A02_DSALIB_H
