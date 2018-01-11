@@ -46,6 +46,7 @@ struct VM_Record {
     }
 };
 
+bool operator <(time_t& t1, time_t& t2);
 void    printVMRecord(VM_Record &);
 void    strPrintTime(char* des, time_t& t);
 bool    parseVMRecord(char*, VM_Record &);

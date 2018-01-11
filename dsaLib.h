@@ -194,8 +194,8 @@ public:
     ~AVLTree() { destroy(_pRoot); }
 
     bool find(T& key, T* &ret) { return find(_pRoot, key, ret); }
-    bool insert(T& key) { return insert(_pRoot, key); }
-    bool remove(T& key) { return remove(_pRoot, key); }
+    bool insert(T& data, T&key) { return insert(_pRoot, data, key); }
+    bool remove(T& data, T&key) { return remove(_pRoot, data, key); }
     void traverseNLR(void (*op)(T&)) { traverseNLR(_pRoot, op); }
     void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
     void traverseLRN(void (*op)(T&)) { traverseLRN(_pRoot, op); }
@@ -203,8 +203,8 @@ public:
 protected:
     void destroy(AVLNode<T>* &pR);
     bool find(AVLNode<T> *pR, T& key, T* &ret);
-    bool insert(AVLNode<T>* &pR, T& a);
-    bool remove(AVLNode<T>* &pR, T& a);
+    bool insert(AVLNode<T>* &pR, T& a, T& key);
+    bool remove(AVLNode<T>* &pR, T& a,  T& key);
     void traverseNLR(AVLNode<T> *pR, void (*op)(T&));
     void traverseLNR(AVLNode<T> *pR, void (*op)(T&));
     void traverseLRN(AVLNode<T> *pR, void (*op)(T&));
@@ -321,7 +321,21 @@ bool AVLTree<T>::balanceRight(AVLNode<T>*& pR){
 	return false;
 }
 
-
+template<class T>
+bool AVLTree<T>::insert(AVLNode<T>*& pR,T& a,T& key){
+	if(pR == NULL){
+		pR = new AVLNode<T>(a);
+		return true;
+	}
+	if(key < pR->data){
+		if(insert(pR->_pLeft,a,key) == false) return false;
+		return balanceLeft(pR);
+	}
+	else{
+		if(insert(pR->_pRight,a,key) == false) return false;
+		return balanceRight(pR);
+	}
+}
 
 template <class T>
 struct MyAVLNode{
@@ -331,8 +345,45 @@ struct MyAVLNode{
 	AVLTree<T>  latt;
 	MyAVLNode<T>   *_pLeft, *_pRight;
 	int         _bFactor;
-	//MyAVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0) {}
+	MyAVLNode(T& data, T &ID, double& lat, double& lon, time_t& _time) : _data(ID), _pLeft(NULL), _pRight(NULL), _bFactor(0) {
+		timet.insert(data,_time);
+		longt.insert(data, lon);
+		latt.insert(data, lat);
+	}
 };
 
+template <class T>
+class MyAVLTree{
+	 MyAVLNode<T> *_pRoot;
+public:
+	 bool insert(T& data){ return _insert(_pRoot, data); }
+
+protected:
+	 bool _insert(MyAVLNode<T>* &pR, T& data);
+
+	 void _rotLeft(MyAVLNode<T>* &pR);
+	 void _rotRight(MyAVLNode<T>* &pR);
+	 void _rotLR(MyAVLNode<T>* &pR);
+	 void _rotRL(MyAVLNode<T>* &pR);
+
+	 bool _balanceLeft(MyAVLNode<T>* &pR);
+	 bool _balanceRight(MyAVLNode<T>* &pR);
+};
+
+template<class T>
+bool MyAVLTree<T>::_insert(MyAVLNode<T>* &pR, VM_Record& data){
+	if(pR == NULL){
+		pR = new MyAVLNode<T>(data);
+		return true;
+	}
+	if(key < pR->data){
+		if(insert(pR->_pLeft,a,key) == false) return false;
+		return balanceLeft(pR);
+	}
+	else{
+		if(insert(pR->_pRight,a,key) == false) return false;
+		return balanceRight(pR);
+	}
+}
 
 #endif //A02_DSALIB_H
