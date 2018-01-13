@@ -11,12 +11,16 @@
 #ifndef A02_DSALIB_H
 #define A02_DSALIB_H
 
+
 #include <string>
 #include <math.h>
 #include <vector>
+#include <cstring>
+
 
 using namespace std;
 
+#define ID_MAX_LENGTH   16
 
 class DSAException {
     int     _error;
@@ -30,6 +34,7 @@ public:
     int getError() { return _error; }
     string& getErrorText() { return _text; }
 };
+
 
 template <class T>
 struct L1Item {
@@ -186,7 +191,7 @@ struct AVLNode {
 };
 
 
-template <class T>
+template <class T, class K>
 class AVLTree {
     AVLNode<T> *_pRoot;
 public:
@@ -194,17 +199,17 @@ public:
     ~AVLTree() { destroy(_pRoot); }
 
     bool find(T& key, T* &ret) { return find(_pRoot, key, ret); }
-    bool insert(T& data, T&key) { return insert(_pRoot, data, key); }
-    bool remove(T& data, T&key) { return remove(_pRoot, data, key); }
+    bool insert(T& data, K&key) { return insert(_pRoot, data, key); }
+    bool remove(T& data, K&key) { return remove(_pRoot, data, key); }
     void traverseNLR(void (*op)(T&)) { traverseNLR(_pRoot, op); }
     void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
     void traverseLRN(void (*op)(T&)) { traverseLRN(_pRoot, op); }
 
 protected:
     void destroy(AVLNode<T>* &pR);
-    bool find(AVLNode<T> *pR, T& key, T* &ret);
-    bool insert(AVLNode<T>* &pR, T& a, T& key);
-    bool remove(AVLNode<T>* &pR, T& a,  T& key);
+    bool find(AVLNode<T> *pR, K& key, T* &ret);
+    bool insert(AVLNode<T>* &pR, T& a, K& key);
+    bool remove(AVLNode<T>* &pR, T& a,  K& key);
     void traverseNLR(AVLNode<T> *pR, void (*op)(T&));
     void traverseLNR(AVLNode<T> *pR, void (*op)(T&));
     void traverseLRN(AVLNode<T> *pR, void (*op)(T&));
@@ -220,8 +225,8 @@ protected:
 
 //  implementation default avl
 
-template<class T>
-void AVLTree<T>::rotLeft(AVLNode<T>*& pR){
+template<class T, class K>
+void AVLTree<T,K>::rotLeft(AVLNode<T>*& pR){
 	if(pR==NULL) return;
 	AVLNode<T>* p = pR->_pRight;
 	pR->_pRight = p->_pLeft;
@@ -229,8 +234,8 @@ void AVLTree<T>::rotLeft(AVLNode<T>*& pR){
 	pR=p;
 }
 
-template<class T>
-void AVLTree<T>::rotRight(AVLNode<T>*& pR){
+template<class T, class K>
+void AVLTree<T,K>::rotRight(AVLNode<T>*& pR){
 	if(pR==NULL) return;
 	AVLNode<T>* p = pR->_pLeft;
 	pR->_pLeft = p->_pRight;
@@ -238,20 +243,20 @@ void AVLTree<T>::rotRight(AVLNode<T>*& pR){
 	pR = p;
 }
 
-template<class T>
-void AVLTree<T>::rotLR(AVLNode<T>*& pR){
+template<class T, class K>
+void AVLTree<T,K>::rotLR(AVLNode<T>*& pR){
 	rotLeft(pR->pLeft);
 	rotRight(pR);
 }
 
-template<class T>
-void AVLTree<T>::rotRL(AVLNode<T>*& pR){
+template<class T, class K>
+void AVLTree<T,K>::rotRL(AVLNode<T>*& pR){
 	rotRight(pR->_pRight);
 	rotLeft(pR);
 }
 
-template<class T>
-bool AVLTree<T>::balanceLeft(AVLNode<T>*& pR){
+template<class T, class K>
+bool AVLTree<T,K>::balanceLeft(AVLNode<T>*& pR){
 	if(pR->_bFactor == 0){pR->b = -1; return true;}
 	if(pR->_bFactor== 1){ pR->b = 0; return false;}
 	if(pR->_pLeft->_bFactor == -1){// L-L
@@ -285,9 +290,8 @@ bool AVLTree<T>::balanceLeft(AVLNode<T>*& pR){
 	return false;
 }
 
-
-template<class T>
-bool AVLTree<T>::balanceRight(AVLNode<T>*& pR){
+template<class T, class K>
+bool AVLTree<T,K>::balanceRight(AVLNode<T>*& pR){
 	if(pR->_bFactor == 0){pR->_bFactor = 1; return true;}
 	if(pR->_bFactor == -1){ pR->_bFactor = 0; return false;}
 	if(pR->_pRight->_bFactor == 1){
@@ -321,8 +325,8 @@ bool AVLTree<T>::balanceRight(AVLNode<T>*& pR){
 	return false;
 }
 
-template<class T>
-bool AVLTree<T>::insert(AVLNode<T>*& pR,T& a,T& key){
+template<class T, class K>
+bool AVLTree<T,K>::insert(AVLNode<T>*& pR,T& a,K& key){
 	if(pR == NULL){
 		pR = new AVLNode<T>(a);
 		return true;
@@ -336,19 +340,20 @@ bool AVLTree<T>::insert(AVLNode<T>*& pR,T& a,T& key){
 		return balanceRight(pR);
 	}
 }
-
+/*
 template <class T>
 struct MyAVLNode{
-	T			_data;
-	AVLTree<T>  timet;//
-	AVLTree<T>  longt;
-	AVLTree<T>  latt;
-	MyAVLNode<T>   *_pLeft, *_pRight;
+	char			_ID[ID_MAX_LENGTH];
+	AVLTree<VM_Record,T>  timet;//
+	AVLTree<VM_Record,T>   longt;
+	AVLTree<VM_Record,T>  latt;
+	MyAVLNode   *_pLeft, *_pRight;
 	int         _bFactor;
-	MyAVLNode(T& data, T &ID, double& lat, double& lon, time_t& _time) : _data(ID), _pLeft(NULL), _pRight(NULL), _bFactor(0) {
-		timet.insert(data,_time);
-		longt.insert(data, lon);
-		latt.insert(data, lat);
+	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
+		strcpy(_ID,data.id);
+		timet.insert(data,data.timestamp);
+		longt.insert(data, data.latitude);
+		latt.insert(data, data.longitude);
 	}
 };
 
@@ -356,10 +361,10 @@ template <class T>
 class MyAVLTree{
 	 MyAVLNode<T> *_pRoot;
 public:
-	 bool insert(T& data){ return _insert(_pRoot, data); }
+	 bool insert(VM_Record& data){ return _insert(_pRoot, data); }
 
 protected:
-	 bool _insert(MyAVLNode<T>* &pR, T& data);
+	 bool _insert(MyAVLNode<T>* &pR, VM_Record& data);
 
 	 void _rotLeft(MyAVLNode<T>* &pR);
 	 void _rotRight(MyAVLNode<T>* &pR);
@@ -376,14 +381,20 @@ bool MyAVLTree<T>::_insert(MyAVLNode<T>* &pR, VM_Record& data){
 		pR = new MyAVLNode<T>(data);
 		return true;
 	}
-	if(key < pR->data){
-		if(insert(pR->_pLeft,a,key) == false) return false;
+	if(strcmp(data.id,pR->_ID) == 0){
+		pR->latt.insert(data,data.latitude);
+		pR->longt.insert(data,data.longitude);
+		pR->timet.insert(data,data.timestamp);
+		return false;
+	}
+	if(strcmp(data.id,pR->_ID) < 0){
+		if(_insert(pR->_pLeft,data) == false) return false;
 		return balanceLeft(pR);
 	}
 	else{
-		if(insert(pR->_pRight,a,key) == false) return false;
+		if(_insert(pR->_pRight,data) == false) return false;
 		return balanceRight(pR);
 	}
 }
-
+*/
 #endif //A02_DSALIB_H
