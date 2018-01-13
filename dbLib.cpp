@@ -27,6 +27,62 @@ void    strPrintTime(char* des, time_t& t) {
     strftime(des, 26, "%Y-%m-%d %H:%M:%S", pTime);
 }
 
+template <class T>
+struct MyAVLNode{
+	char			_ID[ID_MAX_LENGTH];
+	AVLTree<VM_Record,T>  timet;//
+	AVLTree<VM_Record,T>   longt;
+	AVLTree<VM_Record,T>  latt;
+	MyAVLNode   *_pLeft, *_pRight;
+	int         _bFactor;
+	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
+		strcpy(_ID,data.id);
+		timet.insert(data,data.timestamp);
+		longt.insert(data, data.latitude);
+		latt.insert(data, data.longitude);
+	}
+};
+
+template <class T>
+class MyAVLTree{
+	 MyAVLNode<T> *_pRoot;
+public:
+	 bool insert(VM_Record& data){ return _insert(_pRoot, data); }
+
+protected:
+	 bool _insert(MyAVLNode<T>* &pR, VM_Record& data);
+
+	 void _rotLeft(MyAVLNode<T>* &pR);
+	 void _rotRight(MyAVLNode<T>* &pR);
+	 void _rotLR(MyAVLNode<T>* &pR);
+	 void _rotRL(MyAVLNode<T>* &pR);
+
+	 bool _balanceLeft(MyAVLNode<T>* &pR);
+	 bool _balanceRight(MyAVLNode<T>* &pR);
+};
+
+template<class T>
+bool MyAVLTree<T>::_insert(MyAVLNode<T>* &pR, VM_Record& data){
+	if(pR == NULL){
+		pR = new MyAVLNode<T>(data);
+		return true;
+	}
+	if(strcmp(data.id,pR->_ID) == 0){
+		pR->latt.insert(data,data.latitude);
+		pR->longt.insert(data,data.longitude);
+		pR->timet.insert(data,data.timestamp);
+		return false;
+	}
+	if(strcmp(data.id,pR->_ID) < 0){
+		if(_insert(pR->_pLeft,data) == false) return false;
+		return balanceLeft(pR);
+	}
+	else{
+		if(_insert(pR->_pRight,data) == false) return false;
+		return balanceRight(pR);
+	}
+}
+
 void loadVMDB(char* fName, L1List<VM_Record> &db) {
     ifstream inFile(fName);
 

@@ -340,6 +340,48 @@ bool AVLTree<T,K>::insert(AVLNode<T>*& pR,T& a,K& key){
 		return balanceRight(pR);
 	}
 }
+
+template<class T, class K>
+bool AVLTree<T,K>::find(AVLNode<T> *pR, K& key, T* &ret){
+	if(pR == NULL) return false;
+	else if(key < pR->data) return find(pR->_pLeft,key,ret);
+	else if(key > pR->data) return find(pR->_pRight,key,ret);
+	else{
+		ret = pR;
+		return true;
+	}
+}
+
+template<class T, class K>
+void AVLTree<T,K>::destroy(AVLNode<T>*& pR){
+	if(pR == NULL) return;
+	delete pR;
+	pR = NULL;
+}
+
+template<class T, class K>
+void AVLTree<T,K>::traverseNLR(AVLNode<T> *pR, void (*op)(T&)){
+	if(pR == NULL) return;
+	op(pR->data);
+	traverseNLR(pR->_pLeft,op);
+	traverseNLR(pR->_pRight,op);
+}
+
+template<class T, class K>
+void AVLTree<T,K>::traverseLNR(AVLNode<T> *pR, void (*op)(T&)){
+	if(pR == NULL) return;
+	traverseLNR(pR->_pLeft,op);
+	op(pR->data);
+	traverseLNR(pR->_pRight,op);
+}
+
+template<class T, class K>
+void AVLTree<T,K>::traverseLRN(AVLNode<T> *pR, void (*op)(T&)){
+	if(pR == NULL) return;
+	traverseLRN(pR->_pLeft,op);
+	traverseLRN(pR->_pRight,op);
+	op(pR->data);
+}
 /*
 template <class T>
 struct MyAVLNode{
