@@ -27,12 +27,12 @@ void    strPrintTime(char* des, time_t& t) {
     strftime(des, 26, "%Y-%m-%d %H:%M:%S", pTime);
 }
 
-template <class T>
+
 struct MyAVLNode{
 	char			_ID[ID_MAX_LENGTH];
-	AVLTree<VM_Record,T>  timet;//
-	AVLTree<VM_Record,T>   longt;
-	AVLTree<VM_Record,T>  latt;
+	AVLTree<VM_Record,time_t>  timet;//
+	AVLTree<VM_Record,double>   longt;
+	AVLTree<VM_Record,double>  latt;
 	MyAVLNode   *_pLeft, *_pRight;
 	int         _bFactor;
 	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
@@ -43,28 +43,32 @@ struct MyAVLNode{
 	}
 };
 
-template <class T>
+
 class MyAVLTree{
-	 MyAVLNode<T> *_pRoot;
+	 MyAVLNode *_pRoot;
 public:
+	 MyAVLTree() : _pRoot(NULL) {}
+	~MyAVLTree() { destroy(_pRoot); }
+
 	 bool insert(VM_Record& data){ return _insert(_pRoot, data); }
 
 protected:
-	 bool _insert(MyAVLNode<T>* &pR, VM_Record& data);
+	 void destroy(MyAVLNode* &pR);
+	 bool _insert(MyAVLNode* &pR, VM_Record& data);
 
-	 void _rotLeft(MyAVLNode<T>* &pR);
-	 void _rotRight(MyAVLNode<T>* &pR);
-	 void _rotLR(MyAVLNode<T>* &pR);
-	 void _rotRL(MyAVLNode<T>* &pR);
+	 void _rotLeft(MyAVLNode* &pR);
+	 void _rotRight(MyAVLNode* &pR);
+	 void _rotLR(MyAVLNode* &pR);
+	 void _rotRL(MyAVLNode* &pR);
 
-	 bool _balanceLeft(MyAVLNode<T>* &pR);
-	 bool _balanceRight(MyAVLNode<T>* &pR);
+	 bool _balanceLeft(MyAVLNode* &pR);
+	 bool _balanceRight(MyAVLNode* &pR);
 };
 
-template<class T>
-bool MyAVLTree<T>::_insert(MyAVLNode<T>* &pR, VM_Record& data){
+
+bool MyAVLTree::_insert(MyAVLNode* &pR, VM_Record& data){
 	if(pR == NULL){
-		pR = new MyAVLNode<T>(data);
+		pR = new MyAVLNode(data);
 		return true;
 	}
 	if(strcmp(data.id,pR->_ID) == 0){
@@ -75,11 +79,11 @@ bool MyAVLTree<T>::_insert(MyAVLNode<T>* &pR, VM_Record& data){
 	}
 	if(strcmp(data.id,pR->_ID) < 0){
 		if(_insert(pR->_pLeft,data) == false) return false;
-		return balanceLeft(pR);
+		return _balanceLeft(pR);
 	}
 	else{
 		if(_insert(pR->_pRight,data) == false) return false;
-		return balanceRight(pR);
+		return _balanceRight(pR);
 	}
 }
 
@@ -92,14 +96,15 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
         VM_Record record;
 
         db.insertHead(record);/// add dummy object
-
+        MyAVLTree recordTree;
         while (getline(inFile , line)) {
             /// On Windows, lines on file ends with \r\n. So you have to remove \r
             if (line[line.length() - 1] == '\r')
                 line.erase(line.length() - 1);
             if (line.length() > 0) {
-                if (parseVMRecord((char*)line.data(), db[0]))/// parse and store data directly
-                    db.insertHead(record);/// add dummy object for next turn
+                if (parseVMRecord((char*)line.data(), record))/// parse and store data directly
+                   // db.insertHead(record);/// add dummy object for next turn
+                	recordTree.insert(record);
             }
         }
         db.removeHead();/// remove the first dummy

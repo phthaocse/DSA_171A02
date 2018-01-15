@@ -44,7 +44,11 @@ struct VM_Record {
     VM_Record(VM_Record& bus) : timestamp(bus.timestamp), longitude(bus.longitude), latitude(bus.latitude) {
         strcpy(id, bus.id);
     }
+   // bool operator <(double& key, VM_Record& data);
+   // bool operator <(time_t& key, VM_Record& data);
 };
+
+
 
 void    printVMRecord(VM_Record &);
 void    strPrintTime(char* des, time_t& t);
@@ -63,5 +67,6 @@ bool initVMGlobalData(void** pGData);
 void releaseVMGlobalData(void* pGData);
 
 void process(L1List<VM_Request>& requestList, L1List<VM_Record>& recordList);
+
 
 #endif //DSA171A2_DBLIB_H

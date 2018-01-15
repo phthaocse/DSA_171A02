@@ -177,23 +177,24 @@ T& L1List<T>::operator [](int idx)
 /************************************************************************
  * This section is for AVL tree
  ************************************************************************/
-template <class T>
+template <class T, class K>
 struct AVLNode {
     T           _data;
-    AVLNode<T>   *_pLeft, *_pRight;
+    AVLNode<T,K>   *_pLeft, *_pRight;
+    K			_key;
 #ifdef AVL_USE_HEIGHT
     int         _height;
     AVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _height(1) {}
 #else
     int         _bFactor;
-    AVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0) {}
+    AVLNode(T &a, K &key) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0), _key(key) {}
 #endif
 };
 
 
 template <class T, class K>
 class AVLTree {
-    AVLNode<T> *_pRoot;
+    AVLNode<T,K> *_pRoot;
 public:
     AVLTree() : _pRoot(NULL) {}
     ~AVLTree() { destroy(_pRoot); }
@@ -206,59 +207,59 @@ public:
     void traverseLRN(void (*op)(T&)) { traverseLRN(_pRoot, op); }
 
 protected:
-    void destroy(AVLNode<T>* &pR);
-    bool find(AVLNode<T> *pR, K& key, T* &ret);
-    bool insert(AVLNode<T>* &pR, T& a, K& key);
-    bool remove(AVLNode<T>* &pR, T& a,  K& key);
-    void traverseNLR(AVLNode<T> *pR, void (*op)(T&));
-    void traverseLNR(AVLNode<T> *pR, void (*op)(T&));
-    void traverseLRN(AVLNode<T> *pR, void (*op)(T&));
+    void destroy( AVLNode<T,K>* &pR);
+    bool find(AVLNode<T,K> *pR, K& key, T* &ret);
+    bool insert(AVLNode<T,K>* &pR, T& a, K& key);
+    bool remove(AVLNode<T,K>* &pR, T& a,  K& key);
+    void traverseNLR(AVLNode<T,K> *pR, void (*op)(T&));
+    void traverseLNR(AVLNode<T,K> *pR, void (*op)(T&));
+    void traverseLRN(AVLNode<T,K> *pR, void (*op)(T&));
 
-    void rotLeft(AVLNode<T>* &pR);
-    void rotRight(AVLNode<T>* &pR);
-    void rotLR(AVLNode<T>* &pR);
-    void rotRL(AVLNode<T>* &pR);
+    void rotLeft(AVLNode<T,K>* &pR);
+    void rotRight(AVLNode<T,K>* &pR);
+    void rotLR(AVLNode<T,K>* &pR);
+    void rotRL(AVLNode<T,K>* &pR);
 
-    bool balanceLeft(AVLNode<T>* &pR);
-    bool balanceRight(AVLNode<T>* &pR);
+    bool balanceLeft(AVLNode<T,K>* &pR);
+    bool balanceRight(AVLNode<T,K>* &pR);
 };
 
 //  implementation default avl
 
 template<class T, class K>
-void AVLTree<T,K>::rotLeft(AVLNode<T>*& pR){
+void AVLTree<T,K>::rotLeft(AVLNode<T,K>*& pR){
 	if(pR==NULL) return;
-	AVLNode<T>* p = pR->_pRight;
+	AVLNode<T,K>* p = pR->_pRight;
 	pR->_pRight = p->_pLeft;
 	p->_pLeft = pR;
 	pR=p;
 }
 
 template<class T, class K>
-void AVLTree<T,K>::rotRight(AVLNode<T>*& pR){
+void AVLTree<T,K>::rotRight(AVLNode<T,K>*& pR){
 	if(pR==NULL) return;
-	AVLNode<T>* p = pR->_pLeft;
+	AVLNode<T,K>* p = pR->_pLeft;
 	pR->_pLeft = p->_pRight;
 	p->_pRight = pR;
 	pR = p;
 }
 
 template<class T, class K>
-void AVLTree<T,K>::rotLR(AVLNode<T>*& pR){
-	rotLeft(pR->pLeft);
+void AVLTree<T,K>::rotLR(AVLNode<T,K>*& pR){
+	rotLeft(pR->_pLeft);
 	rotRight(pR);
 }
 
 template<class T, class K>
-void AVLTree<T,K>::rotRL(AVLNode<T>*& pR){
+void AVLTree<T,K>::rotRL(AVLNode<T,K>*& pR){
 	rotRight(pR->_pRight);
 	rotLeft(pR);
 }
 
 template<class T, class K>
-bool AVLTree<T,K>::balanceLeft(AVLNode<T>*& pR){
-	if(pR->_bFactor == 0){pR->b = -1; return true;}
-	if(pR->_bFactor== 1){ pR->b = 0; return false;}
+bool AVLTree<T,K>::balanceLeft(AVLNode<T,K>*& pR){
+	if(pR->_bFactor == 0){pR->_bFactor = -1; return true;}
+	if(pR->_bFactor== 1){ pR->_bFactor = 0; return false;}
 	if(pR->_pLeft->_bFactor == -1){// L-L
 		rotRight(pR);
 		pR->_bFactor  = 0;
@@ -291,7 +292,7 @@ bool AVLTree<T,K>::balanceLeft(AVLNode<T>*& pR){
 }
 
 template<class T, class K>
-bool AVLTree<T,K>::balanceRight(AVLNode<T>*& pR){
+bool AVLTree<T,K>::balanceRight(AVLNode<T,K>*& pR){
 	if(pR->_bFactor == 0){pR->_bFactor = 1; return true;}
 	if(pR->_bFactor == -1){ pR->_bFactor = 0; return false;}
 	if(pR->_pRight->_bFactor == 1){
@@ -326,12 +327,12 @@ bool AVLTree<T,K>::balanceRight(AVLNode<T>*& pR){
 }
 
 template<class T, class K>
-bool AVLTree<T,K>::insert(AVLNode<T>*& pR,T& a,K& key){
+bool AVLTree<T,K>::insert(AVLNode<T,K>*& pR,T& a,K& key){
 	if(pR == NULL){
-		pR = new AVLNode<T>(a);
+		pR = new AVLNode<T,K>(a,key);
 		return true;
 	}
-	if(key < pR->data){
+	if(key < pR->_key){
 		if(insert(pR->_pLeft,a,key) == false) return false;
 		return balanceLeft(pR);
 	}
@@ -342,10 +343,10 @@ bool AVLTree<T,K>::insert(AVLNode<T>*& pR,T& a,K& key){
 }
 
 template<class T, class K>
-bool AVLTree<T,K>::find(AVLNode<T> *pR, K& key, T* &ret){
+bool AVLTree<T,K>::find(AVLNode<T,K> *pR, K& key, T* &ret){
 	if(pR == NULL) return false;
-	else if(key < pR->data) return find(pR->_pLeft,key,ret);
-	else if(key > pR->data) return find(pR->_pRight,key,ret);
+	else if(key < pR->_key) return find(pR->_pLeft,key,ret);
+	else if(key > pR->_key) return find(pR->_pRight,key,ret);
 	else{
 		ret = pR;
 		return true;
@@ -353,34 +354,75 @@ bool AVLTree<T,K>::find(AVLNode<T> *pR, K& key, T* &ret){
 }
 
 template<class T, class K>
-void AVLTree<T,K>::destroy(AVLNode<T>*& pR){
+void AVLTree<T,K>::destroy(AVLNode<T,K>*& pR){
 	if(pR == NULL) return;
 	delete pR;
 	pR = NULL;
 }
 
 template<class T, class K>
-void AVLTree<T,K>::traverseNLR(AVLNode<T> *pR, void (*op)(T&)){
+void AVLTree<T,K>::traverseNLR(AVLNode<T,K> *pR, void (*op)(T&)){
 	if(pR == NULL) return;
-	op(pR->data);
+	op(pR->_data);
 	traverseNLR(pR->_pLeft,op);
 	traverseNLR(pR->_pRight,op);
 }
 
 template<class T, class K>
-void AVLTree<T,K>::traverseLNR(AVLNode<T> *pR, void (*op)(T&)){
+void AVLTree<T,K>::traverseLNR(AVLNode<T,K> *pR, void (*op)(T&)){
 	if(pR == NULL) return;
 	traverseLNR(pR->_pLeft,op);
-	op(pR->data);
+	op(pR->_data);
 	traverseLNR(pR->_pRight,op);
 }
 
 template<class T, class K>
-void AVLTree<T,K>::traverseLRN(AVLNode<T> *pR, void (*op)(T&)){
+void AVLTree<T,K>::traverseLRN(AVLNode<T,K> *pR, void (*op)(T&)){
 	if(pR == NULL) return;
 	traverseLRN(pR->_pLeft,op);
 	traverseLRN(pR->_pRight,op);
-	op(pR->data);
+	op(pR->_data);
+}
+
+template<class T, class K>
+bool AVLTree<T,K>::remove(AVLNode<T,K>* &pR, T& a,  K& key){
+	if(pR==NULL) return false;
+	if(key < pR->_key){
+		if(remove(pR->pLeft,a,key) ){
+		if(pR->_bFactor == -1){pR->_bFactor = 0; return true;}
+		if(pR->_bFactor == 0){pR->_bFactor = 1; return false;}
+		return !balanceRight(pR);
+		}
+	}
+	if(key > pR->_key){
+		if(remove(pR->pRight,a,key)){
+		if(pR->_bFactor == 1){ pR->_bFactor = 0; return true;}//1
+		if(pR->_bFactor == 0){ pR->_bFactor= -1; return false;}//2
+		return !balanceLeft(pR);
+		}
+	}
+	if(pR->_pLeft == NULL && pR->_pRight == NULL){
+			delete pR; pR = NULL; return true;
+	}
+	if(pR->_pLeft  == NULL){
+		AVLNode<T,K>* p = pR;
+		pR=pR->_pRight;
+		delete p; return true;
+	}
+	if(pR->_pRight== NULL){
+		AVLNode<T,K>* p = pR;
+		pR=pR->_pLeft;
+		delete p; return true;
+	}
+	AVLNode<T,K>* p =pR->_pRight;
+	while(p->_pLeft) p = p->_pLeft;
+	pR->_data = p->_data;
+	if(remove(pR->_pRight,a,key)){
+		if(pR->_bFactor == 1){ pR->_bFactor = 0; return true;}//1
+		if(pR->_bFactor == 0){ pR->_bFactor = -1; return false;}//2
+		return !balanceLeft(pR);
+	}
+
 }
 /*
 template <class T>
