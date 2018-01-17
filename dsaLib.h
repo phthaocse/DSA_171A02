@@ -48,8 +48,9 @@ template <class T>
 class L1List {
     L1Item<T>   *_pHead;// The head pointer of linked list
     size_t      _size;// number of elements in this list
+    void* pAVL;
 public:
-    L1List() : _pHead(NULL), _size(0) {}
+    L1List() : _pHead(NULL), _size(0), pAVL(NULL) {}
     ~L1List(){};
 
     void    clean();
@@ -59,6 +60,10 @@ public:
     size_t  getSize() {
         return _size;
     }
+    L1Item<T>* getHead(){return _pHead;} // get pHead
+   	void setHead(L1Item<T>* p){this->_pHead = p;}
+   	void setVoid(void* p){this->pAVL = p;}
+   	void* getVoid(){return pAVL;}
 
     T&      at(int i);
     T&      operator[](int i);
