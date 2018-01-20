@@ -68,5 +68,47 @@ void releaseVMGlobalData(void* pGData);
 
 void process(L1List<VM_Request>& requestList, L1List<VM_Record>& recordList);
 
+struct MyAVLNode{
+	char			_ID[ID_MAX_LENGTH];
+	AVLTree<VM_Record,time_t>  timet;//
+	AVLTree<VM_Record,double>   longt;
+	AVLTree<VM_Record,double>  latt;
+	MyAVLNode   *_pLeft, *_pRight;
+	int         _bFactor;
+	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
+		strcpy(_ID,data.id);
+		timet.insert(data,data.timestamp);
+		longt.insert(data, data.latitude);
+		latt.insert(data, data.longitude);
+	}
+};
+
+
+class MyAVLTree{
+	 MyAVLNode *_pRoot;
+public:
+	 MyAVLTree() : _pRoot(NULL) {}
+	~MyAVLTree() { destroy(_pRoot); }
+
+	 bool insert(VM_Record& data){ return _insert(_pRoot, data); }
+	 MyAVLNode* getRoot(){return _pRoot;}
+	//  void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
+	 void printID(){return printID(_pRoot,0);}
+
+protected:
+	 void destroy(MyAVLNode* &pR);
+	 bool _insert(MyAVLNode* &pR, VM_Record& data);
+	 void printID(MyAVLNode* &pR,int level);
+
+	// void traverseLNR(MyAVLNode*pR, void (*op)(VM_Record&));
+	 void _rotLeft(MyAVLNode* &pR);
+	 void _rotRight(MyAVLNode* &pR);
+	 void _rotLR(MyAVLNode* &pR);
+	 void _rotRL(MyAVLNode* &pR);
+
+	 bool _balanceLeft(MyAVLNode* &pR);
+	 bool _balanceRight(MyAVLNode* &pR);
+};
+
 
 #endif //DSA171A2_DBLIB_H

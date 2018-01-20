@@ -24,7 +24,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#define REQUEST_CODE_SIZE     16
+#define REQUEST_CODE_SIZE     20
 #define MAX_PARAM_SIZE         6
 using namespace std;
 

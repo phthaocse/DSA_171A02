@@ -203,6 +203,7 @@ class AVLTree {
 public:
     AVLTree() : _pRoot(NULL) {}
     ~AVLTree() { destroy(_pRoot); }
+    AVLNode<T,K>* getRoot(){return _pRoot;}
 
     bool find(T& key, T* &ret) { return find(_pRoot, key, ret); }
     bool insert(T& data, K&key) { return insert(_pRoot, data, key); }

@@ -27,48 +27,22 @@ void    strPrintTime(char* des, time_t& t) {
     strftime(des, 26, "%Y-%m-%d %H:%M:%S", pTime);
 }
 
-
-struct MyAVLNode{
-	char			_ID[ID_MAX_LENGTH];
-	AVLTree<VM_Record,time_t>  timet;//
-	AVLTree<VM_Record,double>   longt;
-	AVLTree<VM_Record,double>  latt;
-	MyAVLNode   *_pLeft, *_pRight;
-	int         _bFactor;
-	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
-		strcpy(_ID,data.id);
-		timet.insert(data,data.timestamp);
-		longt.insert(data, data.latitude);
-		latt.insert(data, data.longitude);
+const char* padding(const char* IDcode)
+{
+	if (strlen(IDcode) >= 4) return IDcode;
+	char* tmp = new char[4];
+	tmp[4] = '\0';
+	for (int i = 0; i < 4-strlen(IDcode); i++)
+	{
+		tmp[i] = '0';
 	}
-};
+	for (int i = 0; i < strlen(IDcode); i++)
+	{
+		tmp[i + 4 - strlen(IDcode)] = IDcode[i];
+	}
+	return tmp;
+}
 
-
-class MyAVLTree{
-	 MyAVLNode *_pRoot;
-public:
-	 MyAVLTree() : _pRoot(NULL) {}
-	~MyAVLTree() { destroy(_pRoot); }
-
-	 bool insert(VM_Record& data){ return _insert(_pRoot, data); }
-	 MyAVLNode* getRoot(){return _pRoot;}
-	//  void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
-	 void printID(){return printID(_pRoot,0);}
-
-protected:
-	 void destroy(MyAVLNode* &pR);
-	 bool _insert(MyAVLNode* &pR, VM_Record& data);
-	 void printID(MyAVLNode* &pR,int level);
-
-	// void traverseLNR(MyAVLNode*pR, void (*op)(VM_Record&));
-	 void _rotLeft(MyAVLNode* &pR);
-	 void _rotRight(MyAVLNode* &pR);
-	 void _rotLR(MyAVLNode* &pR);
-	 void _rotRL(MyAVLNode* &pR);
-
-	 bool _balanceLeft(MyAVLNode* &pR);
-	 bool _balanceRight(MyAVLNode* &pR);
-};
 
 void MyAVLTree::_rotLeft(MyAVLNode* &pR){
 	if(pR==NULL) return;
@@ -211,7 +185,7 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
       //  rT->data = recordTree;
         while (getline(inFile , line)) {
             /// On Windows, lines on file ends with \r\n. So you have to remove \r
-            if(i == 50000) break;
+          //  if(i == 50000) break;
         	if (line[line.length() - 1] == '\r')
                 line.erase(line.length() - 1);
             if (line.length() > 0) {
@@ -229,8 +203,8 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
         db.setVoid(&recordTree);
         cout << "nlines: " << i << endl;
 
-       recordTree.printID();
-        recordTree.getRoot()->timet.traverseLNR(printVMRecord);
+      recordTree.printID();
+      // recordTree.getRoot()->timet.traverseLNR(printVMRecord);
     }
 
     else {
@@ -250,6 +224,7 @@ bool parseVMRecord(char *pBuf, VM_Record &bInfo) {
 			&trash,&trash,&trash,&trash);
 	strptime(time, "%m/%d/%Y %H:%M:%S", &tm1);
 	tmp.timestamp = timegm(&tm1);
+	strcpy(tmp.id,padding(tmp.id));
 	bInfo = tmp;
 	return true;
 }
