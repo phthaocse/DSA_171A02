@@ -181,7 +181,7 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
         VM_Record record;
        // L1Item<MyAVLTree>* rT = new L1Item<MyAVLTree>();
         db.insertHead(record);/// add dummy object
-        MyAVLTree recordTree;
+        MyAVLTree* recordTree = new MyAVLTree();
       //  rT->data = recordTree;
         while (getline(inFile , line)) {
             /// On Windows, lines on file ends with \r\n. So you have to remove \r
@@ -191,7 +191,7 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
             if (line.length() > 0) {
                 if (parseVMRecord((char*)line.data(), record)){/// parse and store data directly
                    // db.insertHead(record)
-                	recordTree.insert(record);
+                	recordTree->insert(record);
                 	i++;
                 }
             }
@@ -200,11 +200,11 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
 
      //   db.reverse();
         inFile.close();
-        db.setVoid(&recordTree);
+        db.setVoid(recordTree);
         cout << "nlines: " << i << endl;
 
-      recordTree.printID();
-      // recordTree.getRoot()->timet.traverseLNR(printVMRecord);
+      //recordTree.printID();
+
     }
 
     else {

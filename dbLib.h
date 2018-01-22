@@ -78,8 +78,8 @@ struct MyAVLNode{
 	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
 		strcpy(_ID,data.id);
 		timet.insert(data,data.timestamp);
-		longt.insert(data, data.latitude);
-		latt.insert(data, data.longitude);
+		longt.insert(data,data.longitude);
+		latt.insert(data,data.latitude);
 	}
 };
 
