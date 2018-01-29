@@ -94,10 +94,12 @@ public:
 	 MyAVLNode* getRoot(){return _pRoot;}
 	//  void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
 	 void printID(){return printID(_pRoot,0);}
+	 bool findID(char* ID){ return findID(_pRoot,ID);}
 
 protected:
 	 void destroy(MyAVLNode* &pR);
 	 bool _insert(MyAVLNode* &pR, VM_Record& data);
+	 bool findID(MyAVLNode* &pR,char* ID);
 	 void printID(MyAVLNode* &pR,int level);
 
 	// void traverseLNR(MyAVLNode*pR, void (*op)(VM_Record&));

@@ -172,6 +172,13 @@ void MyAVLTree::printID(MyAVLNode* &pR, int level){
 	printID(pR->_pRight,level+1);
 }
 
+bool MyAVLTree::findID(MyAVLNode* &pR,char* ID){
+	if(pR == NULL) return false;
+	else if(strcmp(ID,pR->_ID) < 0) return findID(pR->_pLeft,ID);
+	else if(strcmp(ID,pR->_ID) > 0) return findID(pR->_pRight,ID);
+	else return true;
+}
+
 void loadVMDB(char* fName, L1List<VM_Record> &db) {
     ifstream inFile(fName);
     int i = 0;
