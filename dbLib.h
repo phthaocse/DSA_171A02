@@ -75,6 +75,7 @@ struct MyAVLNode{
 	AVLTree<VM_Record,double>  latt;
 	MyAVLNode   *_pLeft, *_pRight;
 	int         _bFactor;
+	MyAVLNode(){};
 	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
 		strcpy(_ID,data.id);
 		timet.insert(data,data.timestamp);
@@ -94,12 +95,12 @@ public:
 	 MyAVLNode* getRoot(){return _pRoot;}
 	//  void traverseLNR(void (*op)(T&)) { traverseLNR(_pRoot, op); }
 	 void printID(){return printID(_pRoot,0);}
-	 bool findID(char* ID){ return findID(_pRoot,ID);}
+	 bool findID(char* ID,MyAVLNode*& ret){ return findID(_pRoot,ID,ret);}
 
 protected:
 	 void destroy(MyAVLNode* &pR);
 	 bool _insert(MyAVLNode* &pR, VM_Record& data);
-	 bool findID(MyAVLNode* &pR,char* ID);
+	 bool findID(MyAVLNode* &pR,char* ID,MyAVLNode*& ret);
 	 void printID(MyAVLNode* &pR,int level);
 
 	// void traverseLNR(MyAVLNode*pR, void (*op)(VM_Record&));

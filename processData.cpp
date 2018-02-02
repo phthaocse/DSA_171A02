@@ -31,11 +31,43 @@ void releaseVMGlobalData(void* pGData) {
 
 bool isIdValid(char* ID, MyAVLTree* root){
 	if(strlen(ID) != 4) return false;
-	if(root->findID(ID)) return true;
+	MyAVLNode* tmp = new MyAVLNode();
+	if(root->findID(ID,tmp)) return true;
 	return false;
 }
 
-int compareTime();
+//tm1 > tm2 return 1; tm1 = tm2 return 0; tm1 < tm2 return -1
+int compareTime(struct tm& tm1, struct tm& tm2){
+	if(tm1.tm_hour > tm2.tm_hour) return 1;
+	else if(tm1.tm_hour == tm2.tm_hour){
+		if(tm1.tm_min > tm2.tm_min) return 1;
+		else if(tm1.tm_min == tm2.tm_min){
+			if(tm1.tm_sec > tm2.tm_sec) return 1;
+			else if(tm1.tm_sec == tm2.tm_sec) return 0;
+			else return -1;
+		}
+		else return -1;
+	}
+	else return -1;
+}
+bool process0(AVLNode<VM_Record,time_t>* timeRoot,struct tm& timeI,VM_Record& ret){
+	if(timeRoot == NULL) {return false;}
+	struct tm* timeIn;
+	timeIn = gmtime(&timeRoot->_key);
+	//cout << timeIn->tm_hour << timeIn->tm_min << timeIn->tm_sec << endl;
+	if(compareTime(*timeIn,timeI) == 1) {
+		printVMRecord(timeRoot->_data);
+		return process0(timeRoot->_pLeft,timeI,ret);
+	}
+	else if(compareTime(*timeIn,timeI) == -1){
+		printVMRecord(timeRoot->_data);
+		return process0(timeRoot->_pRight,timeI,ret);
+	}
+	else{
+		ret = timeRoot->_data;
+		return true;
+	}
+}
 
 void process1(MyAVLNode* pR, int& n,int type,double Along){
 	if(pR == NULL) return;
@@ -99,15 +131,16 @@ void process2(MyAVLNode* pR, int& n,int type,double Alat){
 void R1(MyAVLTree* root, char* request){
 	if(root == NULL) return;
 	//xu ly request
-	cout << request << ": ";
+
     const char* delim = "_";
     char* id1, *id2, _time[6];
     memcpy(_time,&request[12],6);
     id1 = strtok(&request[2],delim);
     id2 = strtok(&request[7],delim);
-    _time[6] = '\0'; id1[4] = '\0'; id2[4] = '\0';
-    if(isIdValid(id1,root) && isIdValid(id2,root)){
-    	cout << "-1" << endl;
+    _time[6] = '\0'; id1[4] = '\0';id2[4] = '\0';
+    if(!isIdValid(id1,root) || !isIdValid(id2,root)){
+    	cout << "1: -1" << endl;
+    	return;
     }
     //Xu ly thoi gian
     int t = atoi(_time);
@@ -115,6 +148,24 @@ void R1(MyAVLTree* root, char* request){
     tmp.tm_hour = t/10000;
     tmp.tm_min = t/100 - (t/10000)*100;
     tmp.tm_sec = t - (t/100)*100;
+	cout <<  tmp.tm_hour <<   tmp.tm_min << tmp.tm_sec << endl;
+    MyAVLNode* data1 = new MyAVLNode();
+    MyAVLNode* data2 = new MyAVLNode();
+    root->findID(id1,data1);
+    root->findID(id2,data2);
+
+    VM_Record rec1,rec2;
+    if(!process0(data1->timet.getRoot(),tmp,rec1) || !process0(data2->timet.getRoot(),tmp,rec2) ){
+    	cout << "1: -1" << endl;
+    	return;
+    }
+
+    double dis = distanceEarth(rec1.latitude,rec1.longitude,rec2.latitude,rec2.longitude);
+    char dir1,dir2;
+    dir1 = (rec1.longitude - rec2.longitude >= 0) ? 'E':'W';
+    dir2 = (rec1.latitude - rec2.latitude>= 0) ? 'N':'S';
+    cout << "1: " << dir1 << " "<< dir2 << " " << dis << endl;
+
 
 }
 
