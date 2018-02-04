@@ -187,13 +187,13 @@ struct AVLNode {
     T           _data;
     AVLNode<T,K>   *_pLeft, *_pRight;
     K			_key;
-#ifdef AVL_USE_HEIGHT
+//#ifdef AVL_USE_HEIGHT
     int         _height;
     AVLNode(T &a) : _data(a), _pLeft(NULL), _pRight(NULL), _height(1) {}
-#else
+//#else
     int         _bFactor;
     AVLNode(T &a, K &key) : _data(a), _pLeft(NULL), _pRight(NULL), _bFactor(0), _key(key) {}
-#endif
+//#endif
 };
 
 

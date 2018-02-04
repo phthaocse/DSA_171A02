@@ -211,7 +211,6 @@ void loadVMDB(char* fName, L1List<VM_Record> &db) {
      //   db.reverse();
         inFile.close();
         db.setVoid(recordTree);
-        cout << "nlines: " << i << endl;
 
       //recordTree.printID();
 
@@ -234,7 +233,7 @@ bool parseVMRecord(char *pBuf, VM_Record &bInfo) {
 			&trash,&trash,&trash,&trash);
 	strptime(time, "%m/%d/%Y %H:%M:%S", &tm1);
 	tmp.timestamp = timegm(&tm1);
-	strcpy(tmp.id,padding(tmp.id));
+	//strcpy(tmp.id,padding(tmp.id));
 	bInfo = tmp;
 	return true;
 }
