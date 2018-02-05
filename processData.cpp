@@ -311,37 +311,200 @@ void R5(MyAVLTree* root, char* request){
 	cout <<"5: " << n <<endl;
 
 }
+struct tm before15(struct tm timeIn){
+	struct tm result;
+	if(timeIn.tm_min >= 15){
+		result.tm_hour = timeIn.tm_hour;
+		result.tm_min = timeIn.tm_min - 15;
+	}
+	else{
+		result.tm_hour = timeIn.tm_hour - 1;
+		result.tm_min = timeIn.tm_min + 60 - 15;
+	}
+	return result;
+}
+
+bool compare15(struct tm timeIn1,struct tm timeIn2,struct tm timeIn3){
+	if(timeIn2.tm_hour == timeIn1.tm_hour && timeIn2.tm_hour == timeIn3.tm_hour){
+		if(timeIn2.tm_min >= timeIn1.tm_min && timeIn2.tm_min < timeIn3.tm_min) return true;
+		else return false;
+	}
+	else if(timeIn1.tm_hour > timeIn3.tm_hour){
+		if(timeIn2.tm_hour == timeIn1.tm_hour){
+			if(timeIn2.tm_min < timeIn1.tm_min) return true;
+			else return false;
+		}
+		else if(timeIn2.tm_hour == timeIn3.tm_hour){
+			if(timeIn2.tm_min >= timeIn3.tm_min) return true;
+			else return false;
+		}
+		else return false;
+	}
+	else{
+		if(timeIn2.tm_hour == timeIn3.tm_hour){
+			if(timeIn2.tm_min < timeIn3.tm_min) return true;
+			else return false;
+		}
+		else if(timeIn2.tm_hour == timeIn1.tm_hour){
+			if(timeIn2.tm_min >= timeIn1.tm_min) return true;
+			else return false;
+		}
+		else return false;
+	}
+}
+
+void process5_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, struct tm timeIn,int& b){
+	if(timeRoot == NULL) return;
+	struct tm* TimeIn;
+	TimeIn = gmtime(&timeRoot->_key);
+	struct tm landmark = before15(timeIn);
+
+	if(compare15(landmark,*TimeIn,timeIn)){
+		double dis = distanceEarth(Alat,Along,timeRoot->_data.latitude,timeRoot->_data.longitude);
+		if(dis < 0.3){ b = 3; return;}
+		else if(dis < 0.5) b = 2;
+		else if(dis < 2) b = 1;
+		else b = 0;
+	}
+
+	process5_(timeRoot->_pLeft,Along,Alat,timeIn,b);
+	process5_(timeRoot->_pRight,Along,Alat,timeIn,b);
+}
+
+void process5(MyAVLNode* pR, double Along, double Alat, struct tm timeIn,L1List<string>& K2,L1List<string>& K0_5,L1List<string>& K0_3){
+	if(pR == NULL) return;
+	process5(pR->_pLeft,Along,Alat,timeIn,K2,K0_5,K0_3);
+
+	int b = 0;
+	process5_(pR->timet.getRoot(),Along,Alat,timeIn,b);
+	string strID(pR->_ID);
+	if(b == 3) K0_3.push_back(strID);
+	else if(b == 2) K0_5.push_back(strID);
+	else if(b == 1) K2.push_back(strID);
+
+	process5(pR->_pRight,Along,Alat,timeIn,K2,K0_5,K0_3);
+}
+
+void R6(MyAVLTree* root, char* request){
+	double Along,Alat,M;
+	int TimeIn;
+	char* along,*alat,*m;
+	char timeIn[4];
+
+	const char* delim = "_";
+	int rsize = strlen(request);
+
+	along = strtok(&request[2],delim);
+	along[strlen(along)] = '\0';
+	alat = strtok(&request[2+strlen(along)+1],delim);
+	alat[strlen(alat)] = '\0';
+	m = strtok(&request[2+strlen(along) + strlen(alat) +2],delim);
+	m[strlen(m)] = '\0';
+	int tmpsize = 2+strlen(along) + strlen(alat) + strlen(m) + 3;
+	memcpy(timeIn,&request[tmpsize],rsize - tmpsize);
+	timeIn[strlen(timeIn)] = '\0';
+
+	Along = atof(along);
+	Alat = atof(alat);
+	M = atof(m);
+	TimeIn = atoi(timeIn);
+
+	//cout << Along << " "<< Alat << " "<< M << " "<< TimeIn << endl;
+	struct tm timeI;
+	timeI.tm_hour = TimeIn/100;
+	timeI.tm_min = TimeIn - timeI.tm_hour*100;
+
+	//cout << timeI.tm_min << " " << timeI.tm_sec << endl;
+	L1List<string>  K2;
+	L1List<string>  K0_5;
+	L1List<string>  K0_3;
+
+	process5(root->getRoot(),Along,Alat,timeI,K2,K0_5,K0_3);
+	cout << "6:";
+	int ks2 = K2.getSize();
+	int ks05 = K0_5.getSize();
+	int ks03 = K0_3.getSize();
+	if((ks2 + ks05 + ks03) == 0) cout << " - -1" << endl;
+	else if((ks2 + ks05 + ks03) < M){
+		for(int i = 0; i < ks2; i++){
+			cout << " " << K2[i].data();
+		}
+		for(int j = 0; j < ks05; j++){
+			cout << " " << K0_5[j].data();
+		}
+		for(int h = 0; h < ks03; h++){
+			cout << " " << K0_3[h].data();
+		}
+		cout << " - -1" << endl;
+	}
+	else{
+		if(double(ks03) > 0.75*M){
+			cout << " -1 - ";
+			for(int i = 0; i < ks2; i++){
+				cout << " " << K2[i].data();
+			}
+			for(int j = 0; j < ks05; j++){
+				cout << " " << K0_5[j].data();
+			}
+			for(int h = 0; h < ks03; h++){
+				cout << " " << K0_3[h].data();
+			}
+			cout << endl;
+		}
+		else{
+			for(int j = 0; j < ks05; j++){
+				cout << " " << K0_5[j].data();
+			}
+			for(int h = 0; h < ks03; h++){
+				cout << " " << K0_3[h].data();
+			}
+			cout << " -";
+			for(int i = 0; i < ks2; i++){
+				cout << " " << K2[i].data();
+			}
+			cout << endl;
+		}
+	}
+
+	cout << ks2 + ks05 + ks03 << endl;
+}
+
 bool testRequest(VM_Request & request){
 	if(request.code[strlen(request.code)-1] == '_') return false;
 	int ndelim = 0;
 	for(int i = 0; i < strlen(request.code);i++){
 		if(request.code[i] == '_') ndelim++;
 	}
-	switch(request.code[0]){
-	case '1':
-		if(ndelim != 3) return false;break;
-	case '2':{
-		if(ndelim != 2) return false;
-		else{
-			char dir = request.code[strlen(request.code)-1];
-			if(dir != 'W' && dir != 'E') return false;
+	if(request.code[1] == '_'){
+		switch(request.code[0]){
+		case '1':
+			if(ndelim != 3) return false;break;
+		case '2':{
+			if(ndelim != 2) return false;
+			else{
+				char dir = request.code[strlen(request.code)-1];
+				if(dir != 'W' && dir != 'E') return false;
+			}
+			break;
 		}
-		break;
-	}
-	case '3':{
-		if(ndelim != 2) return false;
-		else{
-			char dir = request.code[strlen(request.code)-1];
-			if(dir != 'N' && dir != 'S') return false;
+		case '3':{
+			if(ndelim != 2) return false;
+			else{
+				char dir = request.code[strlen(request.code)-1];
+				if(dir != 'N' && dir != 'S') return false;
+			}
+			break;
+		case '4':
+			if(ndelim != 5) return false;break;
+		case '5':
+			if(ndelim != 4) return false;break;
+		case '6':
+			if(ndelim != 4) return false;break;
 		}
-		break;
-	case '4':
-		if(ndelim != 5) return false;break;
-	case '5':
-		if(ndelim != 4) return false;break;
+		default: return false;
+		}
 	}
-	default: return true;
-	}
+	else return false;
 	return true;
 }
 
@@ -365,6 +528,8 @@ bool processRequest(VM_Request &request, L1List<VM_Record> &recordList, void *pG
 		R4(rTree,request.code); break;
 	case '5':
 		R5(rTree,request.code); break;
+	case '6':
+		R6(rTree,request.code); break;
 	default: return false;
 	}
     return true;
