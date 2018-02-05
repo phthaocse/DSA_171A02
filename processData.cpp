@@ -257,9 +257,99 @@ void R4(MyAVLTree* root, char* request){
 	cout <<"4: " << result <<endl;
 }
 
+void process4(AVLNode<VM_Record,time_t>* timeRoot,double Along,double Alat,double R,int& state,int& n){
+	if(timeRoot == NULL) return;
+	process4(timeRoot->_pLeft,Along,Alat,R,state,n);
+	double dis = distanceEarth(Alat,Along,timeRoot->_data.latitude,timeRoot->_data.longitude);
+	if(dis <= R){
+		if(state == -1){
+			state = 0;//nam trong tram
+			n++;
+		}
+		else if(state == 1){
+			state = 0;
+			n++;
+		}
+	}
+	else{
+		if(state == -1) state = 1;
+		else if(state == 0) state = 1;
+	}
+
+	process4(timeRoot->_pRight,Along,Alat,R,state,n);
+}
+
+void R5(MyAVLTree* root, char* request){
+	double Along,Alat,R;
+	char* along,*alat,*id,*r = new char();
+	const char* delim = "_";
+	int rsize = strlen(request);
+
+	id = strtok(&request[2],delim);
+	id[strlen(id)] = '\0';
+	along = strtok(&request[2+strlen(id)+1],delim);
+	along[strlen(along)] = '\0';
+	alat = strtok(&request[2+strlen(along)+strlen(id)+2],delim);
+	alat[strlen(alat)] = '\0';
+	int tmpsize = 2+strlen(along)+strlen(id)+strlen(alat)+3;
+	memcpy(r,&request[tmpsize],rsize - tmpsize);
+	r[strlen(r)] = '\0';
+	Along = atof(along);
+	Alat = atof(alat);
+	R = atof(r);
+
+	MyAVLNode* pR;
+	if(!root->findID(id,pR)){
+		cout << "5: " << endl;
+		return;
+	}
+
+	int state = -1; // khoi tao trang thai ban dau
+	int n = 0;
+	process4(pR->timet.getRoot(),Along,Alat,R,state,n);
+//	cout << id << " " << R << " " << Along << " " << Alat << endl;
+	cout <<"5: " << n <<endl;
+
+}
+bool testRequest(VM_Request & request){
+	if(request.code[strlen(request.code)-1] == '_') return false;
+	int ndelim = 0;
+	for(int i = 0; i < strlen(request.code);i++){
+		if(request.code[i] == '_') ndelim++;
+	}
+	switch(request.code[0]){
+	case '1':
+		if(ndelim != 3) return false;break;
+	case '2':{
+		if(ndelim != 2) return false;
+		else{
+			char dir = request.code[strlen(request.code)-1];
+			if(dir != 'W' && dir != 'E') return false;
+		}
+		break;
+	}
+	case '3':{
+		if(ndelim != 2) return false;
+		else{
+			char dir = request.code[strlen(request.code)-1];
+			if(dir != 'N' && dir != 'S') return false;
+		}
+		break;
+	case '4':
+		if(ndelim != 5) return false;break;
+	case '5':
+		if(ndelim != 4) return false;break;
+	}
+	default: return true;
+	}
+	return true;
+}
+
 bool processRequest(VM_Request &request, L1List<VM_Record> &recordList, void *pGData) {
     // TODO: Your code goes here
     // return false for invlaid events
+	if(!testRequest(request)) return false;
+
 	MyAVLTree* rTree;
 	rTree = (MyAVLTree*)recordList.getVoid();
 	if(rTree == NULL) cout << "fail" << endl;
@@ -273,6 +363,8 @@ bool processRequest(VM_Request &request, L1List<VM_Record> &recordList, void *pG
 		R3(rTree,request.code); break;
 	case '4':
 		R4(rTree,request.code); break;
+	case '5':
+		R5(rTree,request.code); break;
 	default: return false;
 	}
     return true;
