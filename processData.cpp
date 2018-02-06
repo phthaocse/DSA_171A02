@@ -162,7 +162,7 @@ void R1(MyAVLTree* root, char* request){
     id2[strlen(id2)] = '\0';
     memcpy(_time,&request[2+strlen(id1)+strlen(id2)+2],6);
     _time[6] = '\0';
-
+    if(strlen(_time) != 6){ cout << "1: -1" << endl; return;}
     if(!isIdValid(id1,root) || !isIdValid(id2,root)){
     	cout << "1: -1" << endl;
     	return;
@@ -300,9 +300,10 @@ void R5(MyAVLTree* root, char* request){
 
 	MyAVLNode* pR;
 	if(!root->findID(id,pR)){
-		cout << "5: " << endl;
+		cout << "5: -1" << endl;
 		return;
 	}
+
 
 	int state = -1; // khoi tao trang thai ban dau
 	int n = 0;
@@ -407,11 +408,29 @@ void R6(MyAVLTree* root, char* request){
 	Alat = atof(alat);
 	M = atof(m);
 	TimeIn = atoi(timeIn);
-
+//	cout << strlen(timeIn) << " " << timeIn <<endl;
 	//cout << Along << " "<< Alat << " "<< M << " "<< TimeIn << endl;
 	struct tm timeI;
-	timeI.tm_hour = TimeIn/100;
-	timeI.tm_min = TimeIn - timeI.tm_hour*100;
+	if(strlen(timeIn) == 4){
+		timeI.tm_hour = TimeIn/100;
+		timeI.tm_min = TimeIn - timeI.tm_hour*100;
+	}
+	else if(strlen(timeIn) == 3){
+		timeI.tm_hour = TimeIn/10;
+		timeI.tm_min = int(timeIn[2] - '0');
+	}
+	else if(strlen(timeIn) == 2 || strlen(timeIn) == 1){
+		timeI.tm_hour = TimeIn;
+		timeI.tm_min = 0;
+	}
+	else{
+		timeI.tm_hour = int(timeIn[0] - '0')*10 + int(timeIn[1] - '0');
+		timeI.tm_min = int(timeIn[2] - '0')*10 + int(timeIn[3] - '0');
+	}
+
+
+	/*timeI.tm_hour = TimeIn/100;
+	timeI.tm_min = TimeIn - timeI.tm_hour*100;*/
 
 	//cout << timeI.tm_min << " " << timeI.tm_sec << endl;
 	L1List<string>  K2;
@@ -491,6 +510,130 @@ void R6(MyAVLTree* root, char* request){
 
 }
 
+struct tm before30(struct tm timeIn){
+	struct tm result;
+	if(timeIn.tm_min >= 30){
+		result.tm_hour = timeIn.tm_hour;
+		result.tm_min = timeIn.tm_min - 30;
+	}
+	else{
+		result.tm_hour = timeIn.tm_hour - 1;
+		result.tm_min = timeIn.tm_min + 60 - 30;
+	}
+	return result;
+}
+
+bool compare30(struct tm timeIn1,struct tm timeIn2,struct tm timeIn3){
+	if(timeIn2.tm_hour == timeIn1.tm_hour && timeIn2.tm_hour == timeIn3.tm_hour){
+		if(timeIn2.tm_min >= timeIn1.tm_min && timeIn2.tm_min < timeIn3.tm_min) return true;
+		else return false;
+	}
+	else if(timeIn1.tm_hour > timeIn3.tm_hour){
+		if(timeIn2.tm_hour == timeIn1.tm_hour){
+			if(timeIn2.tm_min < timeIn1.tm_min) return true;
+			else return false;
+		}
+		else if(timeIn2.tm_hour == timeIn3.tm_hour){
+			if(timeIn2.tm_min >= timeIn3.tm_min) return true;
+			else return false;
+		}
+		else return false;
+	}
+	else{
+		if(timeIn2.tm_hour == timeIn3.tm_hour){
+			if(timeIn2.tm_min < timeIn3.tm_min) return true;
+			else return false;
+		}
+		else if(timeIn2.tm_hour == timeIn1.tm_hour){
+			if(timeIn2.tm_min >= timeIn1.tm_min) return true;
+			else return false;
+		}
+		else return false;
+	}
+}
+
+void R7(MyAVLTree* root, char* request){
+	double Along,Alat,M,R;
+	int TimeIn;
+	char* along,*alat,*m,*r;
+	char timeIn[4];
+
+	const char* delim = "_";
+	int rsize = strlen(request);
+
+	along = strtok(&request[2],delim);
+	along[strlen(along)] = '\0';
+	alat = strtok(&request[2+strlen(along)+1],delim);
+	alat[strlen(alat)] = '\0';
+	m = strtok(&request[2+strlen(along) + strlen(alat) +2],delim);
+	m[strlen(m)] = '\0';
+	r = strtok(&request[2+strlen(along) + strlen(alat)+ strlen(m) +3],delim);
+	r[strlen(r)] = '\0';
+	int tmpsize = 2+strlen(along) + strlen(alat) + strlen(m) + strlen(r) +4;
+	memcpy(timeIn,&request[tmpsize],rsize - tmpsize);
+	timeIn[strlen(timeIn)] = '\0';
+
+	Along = atof(along);
+	Alat = atof(alat);
+	M = atof(m);
+	R = atof(r);
+	TimeIn = atoi(timeIn);
+
+
+//	cout << Along << " "<< Alat << " "<< M << " "<< R << " " << TimeIn << endl;
+}
+
+void R8(MyAVLTree* root, char* request){
+	double Along,Alat,R;
+	int TimeIn;
+	char* along,*alat,*r;
+	char timeIn[4];
+
+	const char* delim = "_";
+	int rsize = strlen(request);
+
+	along = strtok(&request[2],delim);
+	along[strlen(along)] = '\0';
+	alat = strtok(&request[2+strlen(along)+1],delim);
+	alat[strlen(alat)] = '\0';
+	r = strtok(&request[2+strlen(along) + strlen(alat) +2],delim);
+	r[strlen(r)] = '\0';
+	int tmpsize = 2+strlen(along) + strlen(alat) + strlen(r) + 3;
+	memcpy(timeIn,&request[tmpsize],rsize - tmpsize);
+	timeIn[strlen(timeIn)] = '\0';
+
+	Along = atof(along);
+	Alat = atof(alat);
+	R = atof(r);
+	TimeIn = atoi(timeIn);
+
+}
+
+void R9(MyAVLTree* root, char* request){
+	double Along,Alat,R;
+	int TimeIn;
+	char* along,*alat,*r;
+	char timeIn[4];
+
+	const char* delim = "_";
+	int rsize = strlen(request);
+
+	along = strtok(&request[2],delim);
+	along[strlen(along)] = '\0';
+	alat = strtok(&request[2+strlen(along)+1],delim);
+	alat[strlen(alat)] = '\0';
+	r = strtok(&request[2+strlen(along) + strlen(alat) +2],delim);
+	r[strlen(r)] = '\0';
+	int tmpsize = 2+strlen(along) + strlen(alat) + strlen(r) + 3;
+	memcpy(timeIn,&request[tmpsize],rsize - tmpsize);
+	timeIn[strlen(timeIn)] = '\0';
+
+	Along = atof(along);
+	Alat = atof(alat);
+	R = atof(r);
+	TimeIn = atoi(timeIn);
+}
+
 bool testRequest(VM_Request & request){
 	if(request.code[strlen(request.code)-1] == '_') return false;
 	int ndelim = 0;
@@ -522,6 +665,12 @@ bool testRequest(VM_Request & request){
 			if(ndelim != 4) return false;break;
 		case '6':
 			if(ndelim != 4) return false;break;
+		case '7':
+			if(ndelim != 5) return false;break;
+		case '8':
+			if(ndelim != 4) return false;break;
+		case '9':
+			if(ndelim != 4) return false;break;
 		}
 		default: return false;
 		}
@@ -552,6 +701,12 @@ bool processRequest(VM_Request &request, L1List<VM_Record> &recordList, void *pG
 		R5(rTree,request.code); break;
 	case '6':
 		R6(rTree,request.code); break;
+	case '7':
+		R7(rTree,request.code); break;
+	case '8':
+		R8(rTree,request.code); break;
+	case '9':
+		R9(rTree,request.code); break;
 	default: return false;
 	}
     return true;

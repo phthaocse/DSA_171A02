@@ -75,8 +75,9 @@ struct MyAVLNode{
 	AVLTree<VM_Record,double>  latt;
 	MyAVLNode   *_pLeft, *_pRight;
 	int         _bFactor;
+	bool 		enable;
 	MyAVLNode(){};
-	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0) {
+	MyAVLNode(VM_Record& data) :  _pLeft(NULL), _pRight(NULL), _bFactor(0), enable(true) {
 		strcpy(_ID,data.id);
 		timet.insert(data,data.timestamp);
 		longt.insert(data,data.longitude);
