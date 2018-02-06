@@ -363,8 +363,8 @@ void process5_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, st
 		double dis = distanceEarth(Alat,Along,timeRoot->_data.latitude,timeRoot->_data.longitude);
 		if(dis < 0.3){ b = 3; return;}
 		else if(dis < 0.5) b = 2;
-		else if(dis < 2) b = 1;
-		else b = 0;
+		else if(dis <= 2 && b == 0) b = 1;
+		else if(b == 0) b = 0;
 	}
 
 	process5_(timeRoot->_pLeft,Along,Alat,timeIn,b);
@@ -374,7 +374,6 @@ void process5_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, st
 void process5(MyAVLNode* pR, double Along, double Alat, struct tm timeIn,L1List<string>& K2,L1List<string>& K0_5,L1List<string>& K0_3){
 	if(pR == NULL) return;
 	process5(pR->_pLeft,Along,Alat,timeIn,K2,K0_5,K0_3);
-
 	int b = 0;
 	process5_(pR->timet.getRoot(),Along,Alat,timeIn,b);
 	string strID(pR->_ID);
@@ -426,37 +425,60 @@ void R6(MyAVLTree* root, char* request){
 	int ks03 = K0_3.getSize();
 	if((ks2 + ks05 + ks03) == 0) cout << " - -1" << endl;
 	else if((ks2 + ks05 + ks03) < M){
+		L1List<string> result;
 		for(int i = 0; i < ks2; i++){
-			cout << " " << K2[i].data();
+			string str = K2[i].data();
+			result.insertHead(str);
 		}
 		for(int j = 0; j < ks05; j++){
-			cout << " " << K0_5[j].data();
+			string str = K0_5[j].data();
+			result.insertHead(str);
 		}
 		for(int h = 0; h < ks03; h++){
-			cout << " " << K0_3[h].data();
+			string str = K0_3[h].data();
+			result.insertHead(str);
+		}
+		result.sortLL();
+		for (int s = 0; s < result.getSize(); s++){
+			cout << " " << result[s].data();
 		}
 		cout << " - -1" << endl;
 	}
 	else{
 		if(double(ks03) > 0.75*M){
-			cout << " -1 - ";
+			cout << " -1 -";
+			L1List<string> result;
 			for(int i = 0; i < ks2; i++){
-				cout << " " << K2[i].data();
+				string str = K2[i].data();
+				result.insertHead(str);
 			}
 			for(int j = 0; j < ks05; j++){
-				cout << " " << K0_5[j].data();
+				string str = K0_5[j].data();
+				result.insertHead(str);
 			}
 			for(int h = 0; h < ks03; h++){
-				cout << " " << K0_3[h].data();
+				string str = K0_3[h].data();
+				result.insertHead(str);
+			}
+			result.sortLL();
+			for (int s = 0; s < result.getSize(); s++){
+				cout << " " << result[s].data();
 			}
 			cout << endl;
 		}
 		else{
+			L1List<string> result;
 			for(int j = 0; j < ks05; j++){
-				cout << " " << K0_5[j].data();
+				string str = K0_5[j].data();
+				result.insertHead(str);
 			}
 			for(int h = 0; h < ks03; h++){
-				cout << " " << K0_3[h].data();
+				string str = K0_3[h].data();
+				result.insertHead(str);
+			}
+			result.sortLL();
+			for (int s = 0; s < result.getSize(); s++){
+				cout << " " << result[s].data();
 			}
 			cout << " -";
 			for(int i = 0; i < ks2; i++){
@@ -466,7 +488,7 @@ void R6(MyAVLTree* root, char* request){
 		}
 	}
 
-	cout << ks2 + ks05 + ks03 << endl;
+
 }
 
 bool testRequest(VM_Request & request){

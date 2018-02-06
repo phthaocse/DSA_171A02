@@ -83,6 +83,8 @@ public:
 
     void    reverse();
 
+    void sortLL();
+
     void    traverse(void (*op)(T&)) {
         L1Item<T>   *p = _pHead;
         while (p) {
@@ -114,6 +116,18 @@ int L1List<T>::push_back(T &a) {
 
     _size++;
     return 0;
+}
+template <class T>
+void L1List<T>::sortLL(){
+	L1Item<T>* p1 = _pHead;
+	while(p1->pNext){
+		L1Item<T>* p2 = p1;
+		while(p2){
+			if(p2->data < p1->data) swap(p2->data,p1->data);
+			p2 = p2->pNext;
+		}
+		p1 = p1->pNext;
+	}
 }
 
 /// Insert item to the front of the list
