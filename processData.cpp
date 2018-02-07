@@ -17,6 +17,10 @@ using namespace std;
 
 #define GPS_DISTANCE_ERROR 0.005
 
+struct R7data{
+	char id[10];
+	double maxdis;
+};
 
 bool initVMGlobalData(void** pGData) {
     // TODO: allocate and initialize global data
@@ -156,6 +160,14 @@ void R1(MyAVLTree* root, char* request){
     const char* delim = "_";
     char* id1, *id2, _time[6];
 
+    bool b = true;
+    for(int i = 0; i < strlen(request) - 1; i++){
+    	if(request[i] == '_' && request[i+1] == '_'){
+    		b = false;
+    	}
+    }
+    if(b == false){ cout << "1: -1" <<endl; return;}
+
     id1 = strtok(&request[2],delim);
     id1[strlen(id1)] = '\0';
     id2 = strtok(&request[2+strlen(id1)+1],delim);
@@ -234,23 +246,39 @@ void R4(MyAVLTree* root, char* request){
 	const char* delim = "_";
 	int rsize = strlen(request);
 
-	along = strtok(&request[2],delim);
-	along[strlen(along)] = '\0';
-	alat = strtok(&request[2+strlen(along)+1],delim);
-	alat[strlen(alat)] = '\0';
-	r = strtok(&request[2+strlen(along)+strlen(alat)+2],delim);
-	r[strlen(r)] = '\0';
-	time1 = strtok(&request[2+strlen(along)+strlen(alat)+strlen(r)+3],delim);
-	time1[strlen(time1)] = '\0';
-	int tmpsize = 2+strlen(along)+strlen(alat)+strlen(r)+strlen(time1)+4;
-	char time2[rsize - tmpsize];
-	memcpy(time2,&request[tmpsize],rsize - tmpsize);
-	time2[strlen(time2)] = '\0';
-	Along = atof(along);
-	Alat = atof(alat);
-	R = atof(r);
-	Time1 = atoi(time1);
-	Time2 = atoi(time2);
+	bool b = true;
+	int count = 0;
+	int delimPos[5] = {};
+    for(int i = 0; i < strlen(request) - 1; i++){
+    	if(request[i] == '_'){
+    		count++;
+    		delimPos[count] = i;
+    	}
+    	if(request[i] == '_' && request[i+1] == '_'){
+    		b = false;
+    	}
+    }
+    if(b){
+		along = strtok(&request[2],delim);
+		along[strlen(along)] = '\0';
+		alat = strtok(&request[2+strlen(along)+1],delim);
+		alat[strlen(alat)] = '\0';
+		r = strtok(&request[2+strlen(along)+strlen(alat)+2],delim);
+		r[strlen(r)] = '\0';
+		time1 = strtok(&request[2+strlen(along)+strlen(alat)+strlen(r)+3],delim);
+		time1[strlen(time1)] = '\0';
+		int tmpsize = 2+strlen(along)+strlen(alat)+strlen(r)+strlen(time1)+4;
+		char time2[rsize - tmpsize];
+		memcpy(time2,&request[tmpsize],rsize - tmpsize);
+		time2[strlen(time2)] = '\0';
+		Along = atof(along);
+		Alat = atof(alat);
+		R = atof(r);
+		Time1 = atoi(time1);
+		Time2 = atoi(time2);
+    }
+
+
 	//cout << Along << " " << Alat << " " << R << " " << Time1 << " " << Time2 << endl;
 	int result = 0;
 	process3(root->getRoot(),result,Along,Alat,R,Time1,Time2);
@@ -294,9 +322,14 @@ void R5(MyAVLTree* root, char* request){
 	int tmpsize = 2+strlen(along)+strlen(id)+strlen(alat)+3;
 	memcpy(r,&request[tmpsize],rsize - tmpsize);
 	r[strlen(r)] = '\0';
+
+
+
 	Along = atof(along);
 	Alat = atof(alat);
 	R = atof(r);
+
+
 
 	MyAVLNode* pR;
 	if(!root->findID(id,pR)){
@@ -510,15 +543,15 @@ void R6(MyAVLTree* root, char* request){
 
 }
 
-struct tm before30(struct tm timeIn){
+struct tm after30(struct tm timeIn){
 	struct tm result;
-	if(timeIn.tm_min >= 30){
+	if(timeIn.tm_min <= 30){
 		result.tm_hour = timeIn.tm_hour;
-		result.tm_min = timeIn.tm_min - 30;
+		result.tm_min = timeIn.tm_min + 30;
 	}
 	else{
-		result.tm_hour = timeIn.tm_hour - 1;
-		result.tm_min = timeIn.tm_min + 60 - 30;
+		result.tm_hour = timeIn.tm_hour + 1;
+		result.tm_min = timeIn.tm_min + 30 - 60 ;
 	}
 	return result;
 }
@@ -551,6 +584,48 @@ bool compare30(struct tm timeIn1,struct tm timeIn2,struct tm timeIn3){
 		else return false;
 	}
 }
+void process6_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, struct tm timeIn,int& b,double& maxdis){
+	if(timeRoot == NULL) return;
+	struct tm* TimeIn;
+	TimeIn = gmtime(&timeRoot->_key);
+	struct tm landmark = after30(timeIn);
+	//cout << landmark.tm_hour << landmark.tm_min << endl;
+	if(compare30(timeIn,*TimeIn,landmark)){
+		double dis = distanceEarth(Alat,Along,timeRoot->_data.latitude,timeRoot->_data.longitude);
+		if(dis <= 0.5 && b == 0) b = 1;
+		if(dis > 1 && dis < 2){
+			if(dis > maxdis) maxdis = dis;
+		}
+	}
+	process6_(timeRoot->_pLeft,Along,Alat,timeIn,b,maxdis);
+	process6_(timeRoot->_pRight,Along,Alat,timeIn,b,maxdis);
+}
+void process6(MyAVLNode* pR, double Along, double Alat, struct tm timeIn,L1List<string>& K500,L1List<R7data>& K2_1,L1List<string>& result){
+	if(pR == NULL) return;
+	process6(pR->_pLeft,Along,Alat,timeIn,K500,K2_1,result);
+	int b = 0;
+	double maxdis = 0;
+	process6_(pR->timet.getRoot(),Along,Alat,timeIn,b,maxdis);
+	string strID(pR->_ID);
+	if(b == 1) K500.push_back(strID);
+	if(maxdis != 0){
+		R7data tmp;
+		tmp.maxdis = maxdis;
+		strcpy(tmp.id,pR->_ID);
+		K2_1.push_back(tmp);
+	}
+	if(maxdis != 0 || b == 1) result.push_back(strID);
+	process6(pR->_pRight,Along,Alat,timeIn,K500,K2_1,result);
+}
+
+void sortR7(L1List<R7data>& K2_1){
+	if(K2_1.getHead() == NULL || K2_1.getSize() < 2) return;
+	for(int i = 0; i < K2_1.getSize(); i++){
+		for(int j = i; j <  K2_1.getSize(); j++){
+			if(K2_1[i].maxdis < K2_1[j].maxdis) swap(K2_1[i],K2_1[j]);
+		}
+	}
+}
 
 void R7(MyAVLTree* root, char* request){
 	double Along,Alat,M,R;
@@ -579,6 +654,69 @@ void R7(MyAVLTree* root, char* request){
 	R = atof(r);
 	TimeIn = atoi(timeIn);
 
+	struct tm timeI;
+		if(strlen(timeIn) == 4){
+			timeI.tm_hour = TimeIn/100;
+			timeI.tm_min = TimeIn - timeI.tm_hour*100;
+		}
+		else if(strlen(timeIn) == 3){
+			timeI.tm_hour = TimeIn/10;
+			timeI.tm_min = int(timeIn[2] - '0');
+		}
+		else if(strlen(timeIn) == 2 || strlen(timeIn) == 1){
+			timeI.tm_hour = TimeIn;
+			timeI.tm_min = 0;
+		}
+		else{
+			timeI.tm_hour = int(timeIn[0] - '0')*10 + int(timeIn[1] - '0');
+			timeI.tm_min = int(timeIn[2] - '0')*10 + int(timeIn[3] - '0');
+		}
+
+	L1List<string> K500;
+	L1List<R7data> K2_1;
+	L1List<string> result;
+	process6(root->getRoot(),Along,Alat,timeI,K500,K2_1,result);
+	cout << "7:";
+	double size500 = double(K500.getSize());
+	double size21 = double(K2_1.getSize());
+	double sizeResult = double(result.getSize());
+	if(sizeResult  == 0) cout << " -1 - -1" <<endl;
+	else if(size500 < (0.7*M)){
+		cout << " -1 -";
+		for(int i = 0; i < sizeResult; i++){
+			cout << " " << result[i].data();
+		}
+		cout << endl;
+	}
+	else{
+		sortR7(K2_1);
+		double newsize = size21*double(0.75);
+		L1List<string> ResultOut;
+		L1List<string> ResultIn;
+		for(int count = 0; count < newsize; count++){
+			string strId(K2_1[count].id);
+			ResultOut.insertHead(strId);
+		}
+		for(int count = 0; count < sizeResult; count++){
+			bool b = true;
+			for(int i = 0; i < ResultOut.getSize(); i++){
+				if(result[count] == ResultOut[i]){ b = false; break;}
+			}
+			if(b) ResultIn.insertHead(result[count]);
+		}
+		//cout << newsize << " " << size21 << " " << ResultOut.getSize() << endl;
+		ResultOut.sortLL();
+		ResultIn.sortLL();
+		for(int i = 0; i < ResultIn.getSize(); i++){
+			cout << " " <<  ResultIn[i].data();
+		}
+		cout << " -";
+		for(int i = 0; i < ResultOut.getSize(); i++){
+			cout << " " <<  ResultOut[i].data();
+		}
+		cout << endl;
+
+	}
 
 //	cout << Along << " "<< Alat << " "<< M << " "<< R << " " << TimeIn << endl;
 }

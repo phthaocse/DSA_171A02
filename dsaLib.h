@@ -119,6 +119,7 @@ int L1List<T>::push_back(T &a) {
 }
 template <class T>
 void L1List<T>::sortLL(){
+	if(_size < 0) return;
 	L1Item<T>* p1 = _pHead;
 	while(p1->pNext){
 		L1Item<T>* p2 = p1;
