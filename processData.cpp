@@ -584,7 +584,7 @@ bool compare30(struct tm timeIn1,struct tm timeIn2,struct tm timeIn3){
 		else return false;
 	}
 }
-void process6_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, struct tm timeIn,int& b,double& maxdis){
+void process6_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, struct tm timeIn,int& b,double& maxdis,int& c,int& d){
 	if(timeRoot == NULL) return;
 	struct tm* TimeIn;
 	TimeIn = gmtime(&timeRoot->_key);
@@ -592,29 +592,32 @@ void process6_(AVLNode<VM_Record,time_t>* timeRoot,double Along, double Alat, st
 	//cout << landmark.tm_hour << landmark.tm_min << endl;
 	if(compare30(timeIn,*TimeIn,landmark)){
 		double dis = distanceEarth(Alat,Along,timeRoot->_data.latitude,timeRoot->_data.longitude);
-		if(dis <= 0.5 && b == 0) b = 1;
-		if(dis > 1 && dis < 2){
+	//	if(strcmp(timeRoot->_data.id,"1531") == 0 ) cout << dis << endl;
+		if(dis <= 0.5) b = 1;
+		if(dis >= 1 && dis <= 2){
 			if(dis > maxdis) maxdis = dis;
 		}
+		if(dis >= 0 && dis <= 2) c = 1;
+		if(dis < 1) d = 1;
 	}
-	process6_(timeRoot->_pLeft,Along,Alat,timeIn,b,maxdis);
-	process6_(timeRoot->_pRight,Along,Alat,timeIn,b,maxdis);
+	process6_(timeRoot->_pLeft,Along,Alat,timeIn,b,maxdis,c,d);
+	process6_(timeRoot->_pRight,Along,Alat,timeIn,b,maxdis,c,d);
 }
 void process6(MyAVLNode* pR, double Along, double Alat, struct tm timeIn,L1List<string>& K500,L1List<R7data>& K2_1,L1List<string>& result){
 	if(pR == NULL) return;
 	process6(pR->_pLeft,Along,Alat,timeIn,K500,K2_1,result);
-	int b = 0;
+	int b = 0, c = 0, d = 0;
 	double maxdis = 0;
-	process6_(pR->timet.getRoot(),Along,Alat,timeIn,b,maxdis);
+	process6_(pR->timet.getRoot(),Along,Alat,timeIn,b,maxdis,c,d);
 	string strID(pR->_ID);
 	if(b == 1) K500.push_back(strID);
-	if(maxdis != 0){
+	if(maxdis != 0 && b == 0 && d == 0){
 		R7data tmp;
 		tmp.maxdis = maxdis;
 		strcpy(tmp.id,pR->_ID);
 		K2_1.push_back(tmp);
 	}
-	if(maxdis != 0 || b == 1) result.push_back(strID);
+	if(c == 1) result.push_back(strID);
 	process6(pR->_pRight,Along,Alat,timeIn,K500,K2_1,result);
 }
 
@@ -680,8 +683,11 @@ void R7(MyAVLTree* root, char* request){
 	double size500 = double(K500.getSize());
 	double size21 = double(K2_1.getSize());
 	double sizeResult = double(result.getSize());
+	//cout << size500 << endl;
+	int tmp =  int((0.7)*M);
+	//cout << tmp << endl;
 	if(sizeResult  == 0) cout << " -1 - -1" <<endl;
-	else if(size500 < (0.7*M)){
+	else if(size500 < tmp){
 		cout << " -1 -";
 		for(int i = 0; i < sizeResult; i++){
 			cout << " " << result[i].data();
@@ -690,10 +696,20 @@ void R7(MyAVLTree* root, char* request){
 	}
 	else{
 		sortR7(K2_1);
-		double newsize = size21*double(0.75);
+		/*cout << size21 << " " << sizeResult << endl;
+		for(int j = 0; j < size21; j++){
+			cout <<  K2_1[j].id << " " << K2_1[j].maxdis << endl;
+		}
+		cout << endl;
+		for(int j = 0; j < size500; j++){
+			cout <<  K500[j] << " "  << endl;
+		}
+*/
+		int newsize = int(size21*double(0.75));
+	//	if(size21*double(0.75) - newsize > 0) newsize += 1;
 		L1List<string> ResultOut;
 		L1List<string> ResultIn;
-		for(int count = 0; count < newsize; count++){
+		for(int count = 0; count < newsize ; count++){
 			string strId(K2_1[count].id);
 			ResultOut.insertHead(strId);
 		}
